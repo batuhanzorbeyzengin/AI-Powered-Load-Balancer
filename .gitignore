@@ -1,0 +1,6 @@
+node_modules
+combined.log
+error.log
+performance.log
+src/saved_models
+src/reports
