@@ -1,5 +1,7 @@
 # AI-Powered Load Balancer
 
+> **BETA NOTICE**: This project is currently in BETA stage. Testing is ongoing and the system may not be fully stable. Use with caution in production environments.
+
 ## Overview
 
 This project implements an advanced, AI-powered load balancer system that uses machine learning techniques to optimize request routing, predict traffic patterns, and adapt to changing server conditions in real-time. It's designed to handle complex scenarios and provide intelligent load balancing for high-traffic applications.
