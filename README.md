@@ -10,18 +10,19 @@ This project implements an advanced, AI-powered load balancer system that uses m
 
 1. [Features](#features)
 2. [System Architecture](#system-architecture)
-3. [Installation](#installation)
-4. [Configuration](#configuration)
-5. [Usage](#usage)
-6. [Modules](#modules)
-7. [API Reference](#api-reference)
-8. [Machine Learning Models](#machine-learning-models)
-9. [Load Balancing Strategies](#load-balancing-strategies)
-10. [Monitoring and Analytics](#monitoring-and-analytics)
-11. [Testing](#testing)
-12. [Deployment](#deployment)
-13. [Contributing](#contributing)
-14. [License](#license)
+3. [Project Structure](#project-structure)
+4. [Installation](#installation)
+5. [Configuration](#configuration)
+6. [Usage](#usage)
+7. [Modules](#modules)
+8. [API Reference](#api-reference)
+9. [Machine Learning Models](#machine-learning-models)
+10. [Load Balancing Strategies](#load-balancing-strategies)
+11. [Monitoring and Analytics](#monitoring-and-analytics)
+12. [Testing](#testing)
+13. [Deployment](#deployment)
+14. [Contributing](#contributing)
+15. [License](#license)
 
 ## Features
 
@@ -48,6 +49,69 @@ The system consists of several interconnected modules:
 - **SecurityRouter**: Handles security-related routing decisions
 - **EnergyOptimizer**: Manages energy-efficient server utilization
 - **AnalysisModule**: Generates reports and analytics
+
+## Project Structure
+```json
+ai-loadbalancer
+├─ .env.example
+├─ .gitignore
+├─ README.md
+├─ package-lock.json
+├─ package.json
+├─ src
+│  ├─ api
+│  │  └─ routes.js
+│  ├─ config
+│  │  └─ config.js
+│  ├─ db
+│  │  ├─ mongo.js
+│  ├─ loadTester.js
+│  ├─ modules
+│  │  ├─ analysis
+│  │  │  └─ index.js
+│  │  ├─ cacheOptimizer
+│  │  │  └─ index.js
+│  │  ├─ contentAnalysis
+│  │  │  └─ index.js
+│  │  ├─ energyOptimizer
+│  │  │  └─ index.js
+│  │  ├─ errorHandler
+│  │  │  └─ index.js
+│  │  ├─ loadBalancer
+│  │  │  └─ index.js
+│  │  ├─ mlModels
+│  │  │  ├─ README.md
+│  │  │  └─ index.js
+│  │  ├─ securityRouter
+│  │  │  └─ index.js
+│  │  └─ serverProfiler
+│  │     └─ index.js
+│  ├─ saved_models
+│  │  ├─ anomalyDetection
+│  │  │  ├─ model.json
+│  │  │  └─ weights.bin
+│  │  ├─ contentPopularity
+│  │  │  ├─ model.json
+│  │  │  └─ weights.bin
+│  │  ├─ serverSelection
+│  │  │  ├─ model.json
+│  │  │  └─ weights.bin
+│  │  ├─ trafficPrediction
+│  │  │  ├─ model.json
+│  │  │  └─ weights.bin
+│  │  └─ userBehavior
+│  │     ├─ model.json
+│  │     └─ weights.bin
+│  ├─ server.js
+│  ├─ simulateServers.js
+│  ├─ utils
+│  │  ├─ logger.js
+│  │  └─ modelPersistence.js
+│  └─ views
+│     ├─ dashboard.ejs
+│     └─ login.ejs
+
+```
 
 ## Installation
 
