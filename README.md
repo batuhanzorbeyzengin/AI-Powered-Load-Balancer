@@ -51,8 +51,7 @@ The system consists of several interconnected modules:
 - **AnalysisModule**: Generates reports and analytics
 
 ## Project Structure
-```json
-ai-loadbalancer
+```
 ├─ .env.example
 ├─ .gitignore
 ├─ README.md
