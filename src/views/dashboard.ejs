@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Load Balancer Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+      <h1 class="text-3xl font-bold mb-4">Load Balancer Dashboard</h1>
+      <p class="mb-4">Welcome, <%= user.username %></p>
+
+      <div class="mb-4">
+        <label for="dateRange" class="mr-2">Date Range:</label>
+        <select id="dateRange" class="p-2 border rounded">
+          <option value="1h">Last Hour</option>
+          <option value="24h" selected>Last 24 Hours</option>
+          <option value="7d">Last 7 Days</option>
+          <option value="30d">Last 30 Days</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div class="bg-white p-4 rounded shadow">
+          <h2 class="text-xl font-semibold mb-2">Traffic Overview</h2>
+          <canvas id="trafficChart"></canvas>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+          <h2 class="text-xl font-semibold mb-2">Server Load</h2>
+          <canvas id="serverLoadChart"></canvas>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4 mb-4">
+        <div class="bg-white p-4 rounded shadow">
+          <h2 class="text-xl font-semibold mb-2">User Behavior</h2>
+          <canvas id="userBehaviorChart"></canvas>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+          <h2 class="text-xl font-semibold mb-2">Content Popularity</h2>
+          <canvas id="contentPopularityChart"></canvas>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+          <h2 class="text-xl font-semibold mb-2">System Status</h2>
+          <div id="systemStatus" class="mt-4"></div>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded shadow mb-4">
+        <h2 class="text-xl font-semibold mb-2">Performance Metrics</h2>
+        <canvas id="performanceMetricsChart"></canvas>
+      </div>
+
+      <div
+        id="anomalyAlert"
+        class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 hidden"
+        role="alert"
+      >
+        <p class="font-bold">Anomaly Detected</p>
+        <p id="anomalyMessage"></p>
+      </div>
+    </div>
+
+    <script>
+      const socket = io();
+      let charts = {};
+
+      const token = localStorage.getItem("token");
+
+      console.log(token);
+
+      if (!token) {
+        window.location.href = "/login";
+      }
+
+      async function fetchWithAuth(url, options = {}) {
+        options.headers = {
+          ...options.headers,
+          Authorization: `Bearer ${token}`,
+        };
+        return fetch(url, options);
+      }
+
+      function initializeCharts(data) {
+        charts.traffic = createLineChart(
+          "trafficChart",
+          "Traffic",
+          data.trafficData
+        );
+        charts.serverLoad = createBarChart(
+          "serverLoadChart",
+          "Server Load",
+          data.serverLoad
+        );
+        charts.userBehavior = createPieChart(
+          "userBehaviorChart",
+          "User Behavior",
+          data.userBehavior
+        );
+        charts.contentPopularity = createBarChart(
+          "contentPopularityChart",
+          "Content Popularity",
+          data.contentPopularity
+        );
+        charts.performanceMetrics = createRadarChart(
+          "performanceMetricsChart",
+          "Performance Metrics",
+          data.performanceMetrics
+        );
+        updateSystemStatus(data.systemStatus);
+        updateAnomalyAlert(data.anomalies);
+      }
+
+      function updateCharts(data) {
+        updateLineChart(charts.traffic, data.trafficData);
+        updateBarChart(charts.serverLoad, data.serverLoad);
+        updatePieChart(charts.userBehavior, data.userBehavior);
+        updateBarChart(charts.contentPopularity, data.contentPopularity);
+        updateRadarChart(charts.performanceMetrics, data.performanceMetrics);
+        updateSystemStatus(data.systemStatus);
+        updateAnomalyAlert(data.anomalies);
+      }
+
+      function createLineChart(id, label, data) {
+        const ctx = document.getElementById(id).getContext("2d");
+        return new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: data.map((d) => d.hour),
+            datasets: [
+              {
+                label: label,
+                data: data.map((d) => d.traffic),
+                borderColor: "rgb(75, 192, 192)",
+                tension: 0.1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      }
+
+      function createBarChart(id, label, data) {
+        const ctx = document.getElementById(id).getContext("2d");
+        return new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: data.map((d) => d.server || d.content),
+            datasets: [
+              {
+                label: label,
+                data: data.map((d) => d.load || d.popularity),
+                backgroundColor: "rgba(54, 162, 235, 0.2)",
+                borderColor: "rgb(54, 162, 235)",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+              },
+            },
+          },
+        });
+      }
+
+      function createPieChart(id, label, data) {
+        const ctx = document.getElementById(id).getContext("2d");
+        return new Chart(ctx, {
+          type: "pie",
+          data: {
+            labels: data.map((d) => d.name),
+            datasets: [
+              {
+                label: label,
+                data: data.map((d) => d.value),
+                backgroundColor: [
+                  "rgba(255, 99, 132, 0.2)",
+                  "rgba(54, 162, 235, 0.2)",
+                  "rgba(255, 206, 86, 0.2)",
+                ],
+                borderColor: [
+                  "rgba(255, 99, 132, 1)",
+                  "rgba(54, 162, 235, 1)",
+                  "rgba(255, 206, 86, 1)",
+                ],
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+          },
+        });
+      }
+
+      function createRadarChart(id, label, data) {
+        const ctx = document.getElementById(id).getContext("2d");
+        return new Chart(ctx, {
+          type: "radar",
+          data: {
+            labels: Object.keys(data),
+            datasets: [
+              {
+                label: label,
+                data: Object.values(data),
+                fill: true,
+                backgroundColor: "rgba(255, 99, 132, 0.2)",
+                borderColor: "rgb(255, 99, 132)",
+                pointBackgroundColor: "rgb(255, 99, 132)",
+                pointBorderColor: "#fff",
+                pointHoverBackgroundColor: "#fff",
+                pointHoverBorderColor: "rgb(255, 99, 132)",
+              },
+            ],
+          },
+          options: {
+            elements: {
+              line: {
+                borderWidth: 3,
+              },
+            },
+          },
+        });
+      }
+
+      function updateLineChart(chart, data) {
+        chart.data.labels = data.map((d) => d.hour);
+        chart.data.datasets[0].data = data.map((d) => d.traffic);
+        chart.update();
+      }
+
+      function updateBarChart(chart, data) {
+        chart.data.labels = data.map((d) => d.server || d.content);
+        chart.data.datasets[0].data = data.map((d) => d.load || d.popularity);
+        chart.update();
+      }
+
+      function updatePieChart(chart, data) {
+        chart.data.labels = data.map((d) => d.name);
+        chart.data.datasets[0].data = data.map((d) => d.value);
+        chart.update();
+      }
+
+      function updateRadarChart(chart, data) {
+        chart.data.labels = Object.keys(data);
+        chart.data.datasets[0].data = Object.values(data);
+        chart.update();
+      }
+
+      function updateSystemStatus(data) {
+        const statusDiv = document.getElementById("systemStatus");
+        statusDiv.innerHTML = `
+                <p><strong>Active Servers:</strong> ${data.activeServers}</p>
+                <p><strong>Total Users:</strong> ${data.totalUsers}</p>
+                <p><strong>Avg. Response Time:</strong> ${data.avgResponseTime}ms</p>
+            `;
+      }
+
+      function updateAnomalyAlert(anomalies) {
+        const alertDiv = document.getElementById("anomalyAlert");
+        const messageP = document.getElementById("anomalyMessage");
+        if (anomalies.length > 0) {
+          messageP.textContent = anomalies[0].message;
+          alertDiv.classList.remove("hidden");
+        } else {
+          alertDiv.classList.add("hidden");
+        }
+      }
+
+      // Initial data fetch
+      fetchWithAuth("/api/dashboard/data", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => initializeCharts(data));
+
+      // WebSocket updates
+      socket.on("dashboardUpdate", (data) => {
+        updateCharts(data);
+      });
+
+      // Date range change handler
+      document
+        .getElementById("dateRange")
+        .addEventListener("change", (event) => {
+          const range = event.target.value;
+          fetchWithAuth(`/api/dashboard/data?range=${range}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          })
+            .then((response) => response.json())
+            .then((data) => updateCharts(data));
+        });
+    </script>
+  </body>
+</html>
