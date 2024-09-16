@@ -51,12 +51,12 @@ The system consists of several interconnected modules:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/ai-loadbalancer.git
+   git clone https://github.com/batuhanzorbeyzengin/AI-Powered-Load-Balancer.git
    ```
 
 2. Install dependencies:
    ```
-   cd ai-loadbalancer
+   cd AI-Powered-Load-Balancer
    npm install
    ```
 
