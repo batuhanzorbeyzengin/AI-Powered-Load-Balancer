@@ -9,7 +9,8 @@ class MLModels {
       serverSelection: null,
       userBehavior: null,
       contentPopularity: null,
-      anomalyDetection: null
+      anomalyDetection: null,
+      weightOptimization: null
     };
   }
 
@@ -33,13 +34,15 @@ class MLModels {
     const userBehavior = await this.predictUserBehavior(userInfo);
     const contentPopularity = await this.predictContentPopularity(contentInfo);
     const isAnomaly = await this.detectAnomaly(contentInfo, serverProfiles, userInfo);
+    const optimizedWeights = await this.optimizeWeights(serverProfiles, trafficPrediction);
 
     return {
       trafficPrediction,
       serverSelection,
       userBehavior,
       contentPopularity,
-      isAnomaly
+      isAnomaly,
+      optimizedWeights
     };
   }
 
@@ -73,6 +76,12 @@ class MLModels {
     const input = tf.tensor2d([this.preprocessAnomalyDetection(contentInfo, serverProfiles, userInfo)]);
     const prediction = this.models.anomalyDetection.predict(input);
     return prediction.dataSync()[0] > 0.5;
+  }
+
+  async optimizeWeights(serverProfiles, trafficPrediction) {
+    const input = tf.tensor2d([this.preprocessWeightOptimization(serverProfiles, trafficPrediction)]);
+    const prediction = this.models.weightOptimization.predict(input);
+    return this.postprocessWeights(prediction.dataSync(), serverProfiles);
   }
 
   preprocessContentInfo(contentInfo) {
@@ -146,6 +155,25 @@ class MLModels {
     return preprocessed;
   }
 
+  preprocessWeightOptimization(serverProfiles, trafficPrediction) {
+    return [
+      trafficPrediction,
+      ...serverProfiles.flatMap(profile => [
+        profile.currentLoad || 0,
+        profile.performance || 0,
+        profile.activeConnections || 0
+      ])
+    ];
+  }
+
+  postprocessWeights(rawWeights, serverProfiles) {
+    const weights = {};
+    serverProfiles.forEach((profile, index) => {
+      weights[profile.id] = Math.max(0.1, rawWeights[index]); // Ensure positive weights
+    });
+    return weights;
+  }
+
   oneHotEncode(value, categories) {
     return categories.map(category => value === category ? 1 : 0);
   }
@@ -192,6 +220,15 @@ class MLModels {
     model.add(tf.layers.dense({ units: 32, activation: 'relu' }));
     model.add(tf.layers.dense({ units: 1, activation: 'sigmoid' }));
     model.compile({ optimizer: 'adam', loss: 'binaryCrossentropy' });
+    return model;
+  }
+
+  async createWeightOptimizationModel() {
+    const model = tf.sequential();
+    model.add(tf.layers.dense({ units: 64, activation: 'relu', inputShape: [16] })); // 1 + 3 * 5 servers
+    model.add(tf.layers.dense({ units: 32, activation: 'relu' }));
+    model.add(tf.layers.dense({ units: 5, activation: 'softmax' }));
+    model.compile({ optimizer: 'adam', loss: 'meanSquaredError' });
     return model;
   }
 

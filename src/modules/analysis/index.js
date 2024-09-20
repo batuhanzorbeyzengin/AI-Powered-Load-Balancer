@@ -10,6 +10,11 @@ class Analysis {
       trainingHistory: [],
       routingDecisions: [],
       performanceMetrics: [],
+      algorithmPerformance: {
+        'round-robin': [],
+        'weighted-round-robin': [],
+        'ml-optimized': []
+      }
     };
     this.reportsDir = path.join(__dirname, '..', '..', 'reports');
   }
@@ -40,7 +45,14 @@ class Analysis {
       timestamp: Date.now(),
       requestPath: request.path,
       selectedServer: selectedServer.id,
-      predictions,
+      algorithm: this.loadBalancer.algorithm,
+      predictions
+    });
+
+    this.analysisData.algorithmPerformance[this.loadBalancer.algorithm].push({
+      timestamp: Date.now(),
+      serverLoad: selectedServer.currentLoad,
+      responseTime: Date.now() - request.startTime
     });
   }
 
@@ -60,6 +72,7 @@ class Analysis {
         modelAccuracy: await this.analyzeModelAccuracy(),
         serverUtilization: this.analyzeServerUtilization(),
         requestPatterns: this.analyzeRequestPatterns(),
+        algorithmComparison: this.compareAlgorithms()
       };
 
       await this.saveReport(report);
@@ -167,6 +180,19 @@ class Analysis {
       .map(([path, count]) => ({ path, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);  // Top 10 most requested paths
+  }
+
+  compareAlgorithms() {
+    const algorithms = ['round-robin', 'weighted-round-robin', 'ml-optimized'];
+    return algorithms.map(algorithm => {
+      const data = this.analysisData.algorithmPerformance[algorithm];
+      if (data.length === 0) {
+        return { algorithm, avgResponseTime: null, avgServerLoad: null, requestCount: 0 };
+      }
+      const avgResponseTime = data.reduce((sum, item) => sum + item.responseTime, 0) / data.length;
+      const avgServerLoad = data.reduce((sum, item) => sum + item.serverLoad, 0) / data.length;
+      return { algorithm, avgResponseTime, avgServerLoad, requestCount: data.length };
+    });
   }
 
   async saveReport(report) {

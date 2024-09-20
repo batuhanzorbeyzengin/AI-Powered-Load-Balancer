@@ -4,11 +4,13 @@ const logger = require('../../utils/logger');
 class ServerProfiler {
   constructor() {
     this.servers = [];
+    this.weights = {};
   }
 
   async initialize() {
     try {
       await this.loadServers();
+      this.initializeWeights();
       logger.info('ServerProfiler initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize ServerProfiler', { error: error.message });
@@ -26,10 +28,19 @@ class ServerProfiler {
     }
   }
 
+  initializeWeights() {
+    this.servers.forEach(server => {
+      this.weights[server.id] = 1; // Default weight
+    });
+  }
+
   async getProfiles() {
     try {
       await this.updateServerStats();
-      return this.servers;
+      return this.servers.map(server => ({
+        ...server.toObject(),
+        weight: this.weights[server.id]
+      }));
     } catch (error) {
       logger.error('Failed to get server profiles', { error: error.message });
       return [];
@@ -46,7 +57,7 @@ class ServerProfiler {
             $set: { 
               stats: stats, 
               lastUpdated: new Date(),
-              currentLoad: stats.cpu // Örnek olarak CPU kullanımını currentLoad olarak kullanıyoruz
+              currentLoad: stats.cpu
             } 
           },
           { new: true }
@@ -55,18 +66,21 @@ class ServerProfiler {
         logger.error(`Failed to update stats for server ${server.id}`, { error: error.message });
       }
     }
-    await this.loadServers(); // Güncellenmiş sunucu verilerini yeniden yükle
+    await this.loadServers();
   }
 
   async getServerStats(server) {
-    // Bu fonksiyon gerçek bir senaryoda her sunucuya bağlanıp
-    // gerçek istatistikleri alacaktır. Şimdilik simüle ediyoruz.
+    // Simulated stats retrieval
     return {
       cpu: Math.random() * 100,
       memory: Math.random() * 100,
       networkTraffic: Math.random() * 1000,
       activeConnections: Math.floor(Math.random() * 1000),
     };
+  }
+
+  updateWeights(newWeights) {
+    Object.assign(this.weights, newWeights);
   }
 }
 
