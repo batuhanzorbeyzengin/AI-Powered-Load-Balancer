@@ -1,0 +1,101 @@
+version: '3'
+services:
+  server1:
+    build:
+      context: ..
+      dockerfile: tests/Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - SERVER_ID=server1
+      - CPU_CORES=4
+      - CPU_SPEED=2.5
+      - RAM=8
+      - STORAGE=500
+      - NETWORK_BANDWIDTH=1000
+      - RELIABILITY=0.99
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  server2:
+    build:
+      context: ..
+      dockerfile: tests/Dockerfile
+    ports:
+      - "3002:3000"
+    environment:
+      - SERVER_ID=server2
+      - CPU_CORES=8
+      - CPU_SPEED=3.0
+      - RAM=16
+      - STORAGE=1000
+      - NETWORK_BANDWIDTH=2000
+      - RELIABILITY=0.995
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1024M
+
+  server3:
+    build:
+      context: ..
+      dockerfile: tests/Dockerfile
+    ports:
+      - "3003:3000"
+    environment:
+      - SERVER_ID=server3
+      - CPU_CORES=2
+      - CPU_SPEED=2.0
+      - RAM=4
+      - STORAGE=250
+      - NETWORK_BANDWIDTH=500
+      - RELIABILITY=0.98
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+
+  server4:
+    build:
+      context: ..
+      dockerfile: tests/Dockerfile
+    ports:
+      - "3004:3000"
+    environment:
+      - SERVER_ID=server4
+      - CPU_CORES=16
+      - CPU_SPEED=3.5
+      - RAM=32
+      - STORAGE=2000
+      - NETWORK_BANDWIDTH=5000
+      - RELIABILITY=0.999
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2048M
+
+  server5:
+    build:
+      context: ..
+      dockerfile: tests/Dockerfile
+    ports:
+      - "3005:3000"
+    environment:
+      - SERVER_ID=server5
+      - CPU_CORES=1
+      - CPU_SPEED=1.5
+      - RAM=2
+      - STORAGE=100
+      - NETWORK_BANDWIDTH=100
+      - RELIABILITY=0.97
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 128M
